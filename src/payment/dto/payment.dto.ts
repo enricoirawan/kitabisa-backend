@@ -10,7 +10,7 @@ import {
 export class PaymentDto {
   @Type(() => Number)
   @IsNumber()
-  @Min(1000, { message: 'Minimal Rp.1000' })
+  @Min(1, { message: 'Minimal Rp.1' })
   nominal: number;
 
   @IsNumber()
