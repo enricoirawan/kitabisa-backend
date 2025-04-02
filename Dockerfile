@@ -2,36 +2,35 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# 1. Copy package files dan Prisma schema (untuk layer caching)
+# Copy package files and Prisma schema first for caching
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# 2. Install dependencies (termasuk devDependencies untuk build)
-RUN npm install --legacy-peer-deps
+# Install dependencies
+RUN npm ci
 
-# 3. Copy seluruh kode dan build
+# Copy all files and build
 COPY . .
 RUN npm run build
 
-# 4. Generate Prisma Client (penting!)
+# Generate Prisma client
 RUN npx prisma generate
 
 # Stage 2: Production
 FROM node:20-alpine
 WORKDIR /app
 
-# 1. Install HANYA production dependencies + Prisma
+# Install production dependencies only
 COPY package.json package-lock.json ./
-RUN npm install --omit=dev --legacy-peer-deps && \
-  npm install @prisma/client --legacy-peer-deps
+RUN npm ci --omit=dev
 
-# 2. Copy dari builder stage
+# Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma 
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-# 4. Jalankan dengan error handling dan memory limit
-CMD ["sh", "-c", "npx prisma migrate deploy || echo 'Migration failed but continuing...' && node --max_old_space_size=1024 dist/main.js"]
+# Run migrations, seeding, then start app
+CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node dist/main.js"]

@@ -8,6 +8,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   APP_PORT: 3000
+  DB_PORT: 5432  # Port database yang benar
 
 jobs:
   build-and-push:
@@ -27,12 +28,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             NODE_ENV=production
 
@@ -67,17 +73,17 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            # Pastikan network `kitabisa-network` sudah ada
+            # Buat network jika belum ada
             docker network ls | grep kitabisa-network || docker network create kitabisa-network
 
-            # Pull the latest image
+            # Pull image terbaru
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             
-            # Stop and remove old container
+            # Hentikan dan hapus container lama
             docker stop kitabisa-be || true
             docker rm kitabisa-be || true
 
-            # Run new container with all environment variables
+            # Jalankan container baru dengan semua environment variables
             docker run -d \
               --name kitabisa-be \
               --restart unless-stopped \
@@ -93,10 +99,19 @@ jobs:
               -e MIDTRANS_CLIENT_KEY="$MIDTRANS_CLIENT_KEY" \
               -e MIDTRANS_SERVER_KEY="$MIDTRANS_SERVER_KEY" \
               -e MIDTRANS_IS_PRODUCTION="$MIDTRANS_IS_PRODUCTION" \
-              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5433/$POSTGRES_DB?schema=public" \
+              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@db:$DB_PORT/$POSTGRES_DB?schema=public" \
               --network kitabisa-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-            # Run migrations
-            sleep 10 # Wait for app to start
+            # Tunggu aplikasi start dan jalankan migrasi + seeding
+            echo "Menunggu aplikasi siap..."
+            sleep 15
+            
+            echo "Menjalankan database migrations..."
             docker exec kitabisa-be npx prisma migrate deploy
+            
+            echo "Menjalankan database seeding..."
+            docker exec kitabisa-be npx prisma db seed
+            
+            echo "Deploy selesai!"
+            docker logs kitabisa-be --tail 50
