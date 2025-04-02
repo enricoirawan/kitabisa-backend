@@ -27,7 +27,7 @@ RUN npm install --omit=dev --legacy-peer-deps && \
 
 # 2. Copy dari builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma  # Kritis untuk Prisma!
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma 
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
