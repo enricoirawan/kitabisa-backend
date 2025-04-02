@@ -103,15 +103,8 @@ jobs:
               --network kitabisa-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-            # Tunggu aplikasi start dan jalankan migrasi + seeding
-            echo "Menunggu aplikasi siap..."
-            sleep 15
-            
-            echo "Menjalankan database migrations..."
-            docker exec kitabisa-be npx prisma migrate deploy
-            
-            echo "Menjalankan database seeding..."
-            docker exec kitabisa-be npx prisma db seed
+            sleep 15 # Tunggu migrasi selesai
+            docker logs kitabisa-be | grep -i "migrate\|seed" # Verifikasi
             
             echo "Deploy selesai!"
             docker logs kitabisa-be --tail 50
