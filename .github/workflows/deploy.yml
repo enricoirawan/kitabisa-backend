@@ -67,6 +67,9 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            # Pastikan network `kitabisa-network` sudah ada
+            docker network ls | grep kitabisa-network || docker network create kitabisa-network
+
             # Pull the latest image
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             
@@ -91,7 +94,7 @@ jobs:
               -e MIDTRANS_SERVER_KEY="$MIDTRANS_SERVER_KEY" \
               -e MIDTRANS_IS_PRODUCTION="$MIDTRANS_IS_PRODUCTION" \
               -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5433/$POSTGRES_DB?schema=public" \
-              --network my-network \
+              --network kitabisa-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # Run migrations
