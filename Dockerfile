@@ -7,7 +7,7 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
 # 2. Install semua dependencies (termasuk devDependencies)
-RUN npm install
+RUN npm ci
 
 # 3. Copy seluruh kode dan build
 COPY . .
@@ -22,11 +22,10 @@ WORKDIR /app
 
 # 1. Hanya install production dependencies
 COPY package.json package-lock.json ./
-RUN npm install --only=production
+RUN npm ci --omit=dev
 
 # 2. Copy hasil build dan Prisma Client
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # 3. Copy Prisma schema untuk migrasi
