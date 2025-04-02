@@ -23,7 +23,8 @@ WORKDIR /app
 
 # 1. Hanya install production dependencies
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm cache clean --force
+RUN npm install --legacy-peer-deps
 
 # 2. Copy hasil build dan Prisma Client
 COPY --from=builder /app/dist ./dist
