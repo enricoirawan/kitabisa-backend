@@ -6,8 +6,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# 2. Install semua dependencies (termasuk devDependencies)
-RUN npm ci
+# 2. Install dependencies
+RUN npm cache clean --force
+RUN npm install --legacy-peer-deps
 
 # 3. Copy seluruh kode dan build
 COPY . .
