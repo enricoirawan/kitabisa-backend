@@ -1,10 +1,10 @@
 # Stage 1: Builder
 FROM node:18-alpine AS builder
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
-RUN yarn build
+RUN npm run build
 RUN npx prisma generate
 
 # Stage 2: Production
