@@ -93,7 +93,7 @@ jobs:
               -e MIDTRANS_CLIENT_KEY="$MIDTRANS_CLIENT_KEY" \
               -e MIDTRANS_SERVER_KEY="$MIDTRANS_SERVER_KEY" \
               -e MIDTRANS_IS_PRODUCTION="$MIDTRANS_IS_PRODUCTION" \
-              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5433/$POSTGRES_DB?schema=public" \
+              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@localhost:5433/$POSTGRES_DB?schema=public" \
               --network kitabisa-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
