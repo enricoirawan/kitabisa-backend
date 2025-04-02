@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  username        String         @unique
+  password        String?
+  googleClientId  String?
+  photoProfileUrl String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  Donation        Donation[]
+  Notification    Notification[]
+  Campaign        Campaign[]
+  Payment         Payment[]
+}
+
+model Category {
+  id       Int        @id @default(autoincrement())
+  name     String
+  imageUrl String
+  Campaign Campaign[]
+}
+
+model Campaign {
+  id             Int      @id @default(autoincrement())
+  headline       String
+  description    String
+  targetFunding  Float    @default(0)
+  currentFunding Float    @default(0)
+  banner         String
+  dueTo          DateTime
+  slug           String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  category_id    Int
+  user_id        Int
+
+  category     Category       @relation(fields: [category_id], references: [id])
+  user         User           @relation(fields: [user_id], references: [id])
+  Donation     Donation[]
+  Payment      Payment[]
+  Notification Notification[]
+}
+
+enum PaymentStatus {
+  PENDING
+  EXPIRE
+  SUCCESS
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  orderId       String
+  nominal       Float
+  paymentStatus PaymentStatus @default(PENDING)
+  redirectURL   String
+  messageText   String?
+  userId        Int
+  campaignId    Int
+
+  user     User       @relation(fields: [userId], references: [id])
+  Donation Donation[]
+  campaign Campaign   @relation(fields: [campaignId], references: [id])
+}
+
+model Donation {
+  id         Int      @id @default(autoincrement())
+  message    String
+  nominal    Float
+  createdAt  DateTime @default(now())
+  userId     Int
+  campaignId Int
+  paymentId  Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+  payment  Payment  @relation(fields: [paymentId], references: [id])
+}
+
+model Notification {
+  id            Int      @id @default(autoincrement())
+  message       String
+  isAlreadyRead Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  userId        Int
+  campaignId    Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+}
