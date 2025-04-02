@@ -1,9 +1,7 @@
-name: Build, Push, and Deploy Production
+name: Build, Push, and Deploy
 
 on:
   push:
-    branches: [main]
-  pull_request:
     branches: [main]
 
 env:
@@ -14,12 +12,12 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    permissions: 
+    permissions:
       contents: read
       packages: write
-    
+
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Login to GHCR
@@ -28,49 +26,74 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-      - name: Build and Push Docker Image
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.ref == 'ref/heads/main' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            NODE_ENV=production
 
   deploy-to-server:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    environment: production
 
     steps:
-      - name: Deploy to Server via SSH
+      - name: Deploy to Server
         uses: appleboy/ssh-action@v1
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          # JWT
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
+          # Cloudinary
+          CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+          CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+          CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+          # Google OAuth
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          # Midtrans
+          MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
+          MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
+          MIDTRANS_IS_PRODUCTION: ${{ secrets.MIDTRANS_IS_PRODUCTION }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            # Pull the latest image
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            docker stop nestjs-app || true
-            docker rm nestjs-app || true
+            
+            # Stop and remove old container
+            docker stop kitabisa-be || true
+            docker rm kitabisa-be || true
+
+            # Run new container with all environment variables
             docker run -d \
-              --name nestjs-app \
+              --name kitabisa-be \
               --restart unless-stopped \
               -p ${{ env.APP_PORT }}:${{ env.APP_PORT }} \
-              -e DATABASE_URL="$DATABASE_URL" \
+              -e PORT=${{ env.APP_PORT }} \
               -e JWT_SECRET="$JWT_SECRET" \
+              -e JWT_EXPIRATION="$JWT_EXPIRATION" \
+              -e CLOUDINARY_CLOUD_NAME="$CLOUDINARY_CLOUD_NAME" \
+              -e CLOUDINARY_API_KEY="$CLOUDINARY_API_KEY" \
+              -e CLOUDINARY_API_SECRET="$CLOUDINARY_API_SECRET" \
+              -e GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+              -e GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
+              -e MIDTRANS_CLIENT_KEY="$MIDTRANS_CLIENT_KEY" \
+              -e MIDTRANS_SERVER_KEY="$MIDTRANS_SERVER_KEY" \
+              -e MIDTRANS_IS_PRODUCTION="$MIDTRANS_IS_PRODUCTION" \
+              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5433/$POSTGRES_DB?schema=public" \
+              --network my-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+            # Run migrations
+            sleep 10 # Wait for app to start
+            docker exec kitabisa-be npx prisma migrate deploy
