@@ -1,18 +1,18 @@
-# Tahap pembangunan (builder stage)
-FROM node:18-slim AS builder
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN yarn install
+# Stage 1: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
-# Migrasi Prisma
-RUN npx prisma migrate deploy
-# Seeding Prisma
-RUN npx prisma db seed
+RUN npx prisma generate
 
-# Tahap produksi (production stage)
-FROM node:18-slim AS production
-WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app/dist ./dist
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-CMD ["node", "dist/main.js"]
+# Stage 2: Production
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json .
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
