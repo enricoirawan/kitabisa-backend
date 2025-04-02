@@ -73,7 +73,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            echo "${{ secrets.POSTGRES_PORT }}" > POSTGRES_PORT
+            echo "${{ secrets.POSTGRES_USER }}" > secrets.txt.gpg
             # Buat network jika belum ada
             docker network ls | grep kitabisa-network || docker network create kitabisa-network
 
