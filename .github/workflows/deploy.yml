@@ -47,11 +47,6 @@ jobs:
     environment: production
 
     steps:
-      - name: Debug Environment Variables
-        run: |
-          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}"
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
-          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}"
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1
         env:
@@ -59,6 +54,7 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
           POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+          POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
           # JWT
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           JWT_EXPIRATION: ${{ secrets.JWT_EXPIRATION }}
@@ -104,7 +100,7 @@ jobs:
               -e MIDTRANS_CLIENT_KEY="$MIDTRANS_CLIENT_KEY" \
               -e MIDTRANS_SERVER_KEY="$MIDTRANS_SERVER_KEY" \
               -e MIDTRANS_IS_PRODUCTION="$MIDTRANS_IS_PRODUCTION" \
-              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:$POSTGRES_PORT/$POSTGRES_DB?schema=public" \
+              -e DATABASE_URL="postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB?schema=public" \
               --network kitabisa-network \
               ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
