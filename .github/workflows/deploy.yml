@@ -47,6 +47,9 @@ jobs:
     environment: production
 
     steps:
+      - name: Debug DATABASE_URL
+        run: |
+          echo "DATABASE_URL=postgresql://$POSTGRES_USER:******@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB?schema=public"
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1
         env:
