@@ -47,6 +47,11 @@ jobs:
     environment: production
 
     steps:
+      - name: Debug Environment Variables
+        run: |
+          echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}"
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}"
+          echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}"
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1
         env:
