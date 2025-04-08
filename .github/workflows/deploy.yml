@@ -105,8 +105,8 @@ jobs:
             docker run -d \
             --name kitabisa-be \
             --restart unless-stopped \
-            -p ${APP_PORT}:${APP_PORT} \
-            -e PORT=${APP_PORT} \
+            -p ${{ env.APP_PORT }}:${{ env.APP_PORT }} \
+            -e PORT=${{ env.APP_PORT }} \
             -e JWT_SECRET="$JWT_SECRET" \
             -e JWT_EXPIRATION="$JWT_EXPIRATION" \
             -e CLOUDINARY_CLOUD_NAME="$CLOUDINARY_CLOUD_NAME" \
