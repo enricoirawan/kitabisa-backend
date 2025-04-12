@@ -29,6 +29,7 @@ RUN npm install --legacy-peer-deps
 # 2. Copy hasil build dan Prisma Client
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # 3. Copy Prisma schema untuk migrasi
 COPY --from=builder /app/prisma ./prisma
