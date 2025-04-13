@@ -5,9 +5,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
   const isCategoryExists = await prisma.category.findMany();
-  console.log(isCategoryExists);
 
-  if (!isCategoryExists) {
+  if (!isCategoryExists.length) {
     await prisma.category.createMany({
       data: [
         {
