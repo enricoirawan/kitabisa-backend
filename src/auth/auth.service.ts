@@ -64,7 +64,7 @@ export class AuthService {
       httpOnly: true,
       expires,
       sameSite: 'lax',
-      domain: '.ricoenn.com',
+      domain: this.configService.getOrThrow('FRONT_END_URL'),
       path: '/',
     });
     return { tokenPayload };
