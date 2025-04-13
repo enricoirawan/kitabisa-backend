@@ -63,7 +63,8 @@ export class AuthService {
       secure: true,
       httpOnly: true,
       expires,
-      sameSite: 'none', // karena frontend/backend beda origin
+      sameSite: 'none',
+      domain: '.ricoenn.com',
     });
     return { tokenPayload };
   }
