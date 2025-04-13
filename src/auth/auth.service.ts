@@ -65,6 +65,7 @@ export class AuthService {
       expires,
       sameSite: 'none',
       domain: this.configService.getOrThrow('FRONT_END_URL'),
+      path: '/',
     });
     return { tokenPayload };
   }
