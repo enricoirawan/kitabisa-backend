@@ -60,11 +60,11 @@ export class AuthService {
     };
     const token = this.jwtService.sign(tokenPayload);
     response.cookie('Authentication', token, {
-      secure: true,
+      secure: process.env.NODE_ENV === 'production' ? true : false,
       httpOnly: true,
       expires,
       sameSite: 'lax',
-      domain: '.ricoenn.com',
+      domain: this.configService.getOrThrow('DOMAIN_COOKIE'),
       path: '/',
     });
     return { tokenPayload };
