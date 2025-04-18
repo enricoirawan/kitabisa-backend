@@ -45,6 +45,32 @@ export class PaymentService implements OnModuleInit {
     });
   }
 
+  async getPaymentHistory(userId: number) {
+    try {
+      const result = await this.prisma.payment.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+        include: {
+          campaign: {
+            select: {
+              headline: true,
+              banner: true,
+              slug: true,
+            },
+          },
+        },
+      });
+
+      return result;
+    } catch (error) {
+      return new BadGatewayException(error);
+    }
+  }
+
   async doPayment(userId: number, dto: PaymentDto) {
     try {
       const successFrontEndPage = this.configService.get<string>(
@@ -92,6 +118,7 @@ export class PaymentService implements OnModuleInit {
   async handleNotificationCallback(
     midtransData: MidtransNotificationCallbackData,
   ) {
+    console.log(midtransData);
     try {
       //Handle transaction_status success dan expire
       const callbackSignatureKey = midtransData.signature_key;

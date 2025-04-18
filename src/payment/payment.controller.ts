@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import {
   MidtransNotificationCallbackData,
@@ -11,6 +18,12 @@ import { PaymentDto } from './dto/payment.dto';
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
+
+  @Get('/history')
+  @UseGuards(JwtAuthGuard)
+  async getPaymentHistory(@CurrentUser() user: TokenPayload) {
+    return this.paymentService.getPaymentHistory(user.userId);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
