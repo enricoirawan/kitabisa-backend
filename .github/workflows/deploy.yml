@@ -69,6 +69,8 @@ jobs:
           MIDTRANS_CLIENT_KEY: ${{ secrets.MIDTRANS_CLIENT_KEY }}
           MIDTRANS_SERVER_KEY: ${{ secrets.MIDTRANS_SERVER_KEY }}
           MIDTRANS_IS_PRODUCTION: ${{ secrets.MIDTRANS_IS_PRODUCTION }}
+          MIDTRANS_SUCCESS_CALLBACK_FRONTEND: ${{ secrets.MIDTRANS_SUCCESS_CALLBACK_FRONTEND }}
+          MIDTRANS_ERROR_CALLBACK_FRONTEND: ${{ secrets.MIDTRANS_ERROR_CALLBACK_FRONTEND }}
           FRONT_END_URL: ${{ secrets.FRONT_END_URL }}
           DOMAIN_COOKIE: ${{ secrets.DOMAIN_COOKIE }}
         with:
@@ -92,6 +94,8 @@ jobs:
             export MIDTRANS_CLIENT_KEY="${{ secrets.MIDTRANS_CLIENT_KEY }}"
             export MIDTRANS_SERVER_KEY="${{ secrets.MIDTRANS_SERVER_KEY }}"
             export MIDTRANS_IS_PRODUCTION="${{ secrets.MIDTRANS_IS_PRODUCTION }}"
+            export MIDTRANS_SUCCESS_CALLBACK_FRONTEND="${{ secrets.MIDTRANS_SUCCESS_CALLBACK_FRONTEND }}"
+            export MIDTRANS_ERROR_CALLBACK_FRONTEND="${{ secrets.MIDTRANS_ERROR_CALLBACK_FRONTEND }}"
             export FRONT_END_URL="${{ secrets.FRONT_END_URL }}"
             export DOMAIN_COOKIE="${{ secrets.DOMAIN_COOKIE }}"
 
